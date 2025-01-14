@@ -32,12 +32,16 @@ namespace DoWayWinForms
             { 10, 0b_0110_1111_1111_0000 },
             { 11, 0b_0110_0111_0111_0110 }
         };
-        private Bitmap _treeSpriteSheet; 
+        private Bitmap _treeSpriteSheet;
         private Rectangle[] _treeSpriteRects;
         private bool _isDrawingLine = false;
         private List<Point> _temporaryLine = new List<Point>();
         private Point _startPoint;
         private bool? _isHorizontal = null;
+        private bool _isLineStart = false;
+        private Timer _mouseDownTimer;
+        private const int MouseHoldThreshold = 300;
+
         public Form1()
         {
             InitializeComponent();
@@ -48,6 +52,10 @@ namespace DoWayWinForms
             InitializeMap(10, 10);
             ApplyDarkTheme(this);
             StyleButtonsInToolbar();
+
+            _mouseDownTimer = new Timer();
+            _mouseDownTimer.Interval = MouseHoldThreshold;
+            _mouseDownTimer.Tick += MouseDownTimer_Tick;
         }
         private void ApplyDarkTheme(Control parent)
         {
@@ -253,6 +261,10 @@ namespace DoWayWinForms
         }
         private void PanelMap_MouseClick(object sender, MouseEventArgs e)
         {
+            if (e.Button != MouseButtons.Left) return;
+
+            if (_isDrawingLine) return;
+
             if (_map == null || _selectedSpriteIndex < 0) return;
 
             var mapPoint = _viewport.TransformToMap(new Point(e.X, e.Y));
@@ -292,41 +304,34 @@ namespace DoWayWinForms
         {
             if (e.Button == MouseButtons.Left)
             {
+                _mouseDownTimer.Start();
                 _isDrawingLine = true;
+                _isLineStart = true;
                 _temporaryLine.Clear();
                 _isHorizontal = null;
 
                 var mapPoint = _viewport.TransformToMap(e.Location);
-                _startPoint = new Point(
-                    mapPoint.X / CellSize,
-                    mapPoint.Y / CellSize
-                );
-
-                _temporaryLine.Add(_startPoint);
+                _startPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
 
                 if (_map.IsValidPosition(_startPoint.X, _startPoint.Y))
                 {
-                    int initialSprite = 0;
-                    _map.SetElement(_startPoint.X, _startPoint.Y, new MapElement(initialSprite));
+                    _temporaryLine.Add(_startPoint);
                 }
 
                 panelMap.Invalidate();
             }
-
-            if (e.Button == MouseButtons.Right)
+            else if (e.Button == MouseButtons.Right)
             {
-                _viewport.StartDrag(e.Location);
+                _viewport.StartDrag(e.Location); // Начало перемещения карты
             }
         }
+
         private void PanelMap_MouseMove(object sender, MouseEventArgs e)
         {
             if (_isDrawingLine && e.Button == MouseButtons.Left)
             {
                 var mapPoint = _viewport.TransformToMap(e.Location);
-                var currentPoint = new Point(
-                    mapPoint.X / CellSize,
-                    mapPoint.Y / CellSize
-                );
+                var currentPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
 
                 if (_temporaryLine.Count > 0 && _temporaryLine[_temporaryLine.Count - 1] == currentPoint)
                     return;
@@ -334,70 +339,97 @@ namespace DoWayWinForms
                 if (_isHorizontal == null)
                 {
                     if (Math.Abs(currentPoint.X - _startPoint.X) > Math.Abs(currentPoint.Y - _startPoint.Y))
-                    {
                         _isHorizontal = true;
-                    }
                     else
-                    {
                         _isHorizontal = false;
-                    }
                 }
 
                 if ((_isHorizontal == true && currentPoint.Y == _startPoint.Y) ||
                     (_isHorizontal == false && currentPoint.X == _startPoint.X))
                 {
-                    _temporaryLine.Add(currentPoint);
-
-                    if (_map.IsValidPosition(currentPoint.X, currentPoint.Y))
+                    if (!_temporaryLine.Contains(currentPoint))
                     {
-                        int lineSprite = _isHorizontal == true ? 0 : 3;
-                        _map.SetElement(currentPoint.X, currentPoint.Y, new MapElement(lineSprite));
+                        _temporaryLine.Add(currentPoint);
+                    }
+                    else
+                    {
+                        int index = _temporaryLine.IndexOf(currentPoint);
+                        _temporaryLine.RemoveRange(index + 1, _temporaryLine.Count - index - 1);
                     }
                 }
 
                 panelMap.Invalidate();
             }
-
-            if (_viewport.IsDragging)
+            else if (_viewport.IsDragging && e.Button == MouseButtons.Right)
             {
                 _viewport.Drag(e.Location);
                 panelMap.Invalidate();
             }
         }
+
+        private void MouseDownTimer_Tick(object sender, EventArgs e)
+        {
+            _mouseDownTimer.Stop();
+
+            if (_isLineStart)
+            {
+                _isDrawingLine = true;
+                _isLineStart = false;
+                panelMap.Invalidate();
+            }
+        }
         private void PanelMap_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && _isDrawingLine)
+            if (e.Button == MouseButtons.Left)
             {
-                _isDrawingLine = false;
-
-                if (_temporaryLine.Count > 1 && _temporaryLine[_temporaryLine.Count - 1] == _startPoint)
+                if (_isDrawingLine)
                 {
-                    foreach (var point in _temporaryLine)
+                    if (_temporaryLine.Count > 1)
                     {
-                        if (_map.IsValidPosition(point.X, point.Y))
+                        if (_temporaryLine[0] == _temporaryLine[_temporaryLine.Count - 1])
                         {
-                            _map.SetElement(point.X, point.Y, MapElement.CreateEmpty());
+                            foreach (var point in _temporaryLine)
+                            {
+                                if (_map.IsValidPosition(point.X, point.Y))
+                                {
+                                    _map.SetElement(point.X, point.Y, new MapElement(EmptySpriteIndex));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (var point in _temporaryLine)
+                            {
+                                if (_map.IsValidPosition(point.X, point.Y))
+                                {
+                                    int spriteIndex = _isHorizontal == true ? 0 : 3;
+                                    _map.SetElement(point.X, point.Y, new MapElement(spriteIndex));
+                                }
+                            }
                         }
                     }
-
-                    _temporaryLine.Clear();
-                    _isHorizontal = null;
-
-                    panelMap.Invalidate();
-                    return;
+                    else if (_temporaryLine.Count == 1)
+                    {
+                        var singlePoint = _temporaryLine[0];
+                        if (_map.IsValidPosition(singlePoint.X, singlePoint.Y))
+                        {
+                            _map.SetElement(singlePoint.X, singlePoint.Y, new MapElement(_selectedSpriteIndex));
+                        }
+                    }
                 }
 
                 _temporaryLine.Clear();
                 _isHorizontal = null;
+                _isDrawingLine = false;
 
                 panelMap.Invalidate();
             }
-
-            if (e.Button == MouseButtons.Right)
+            else if (e.Button == MouseButtons.Right)
             {
                 _viewport.EndDrag();
             }
         }
+
         private void btnSaveMap_Click(object sender, EventArgs e)
         {
             SaveFile("Map Files (*.map)|*.map", stream => _map.SaveToStream(stream));

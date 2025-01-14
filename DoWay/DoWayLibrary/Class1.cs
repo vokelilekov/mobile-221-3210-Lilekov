@@ -23,17 +23,20 @@ namespace DoWayLibrary
             Elements = new MapElement[width, height];
             Clear();
         }
+
         public void SetElement(int x, int y, MapElement element)
         {
             if (IsValidPosition(x, y))
                 Elements[x, y] = element;
         }
+
         public void Clear()
         {
             for (int x = 0; x < Width; x++)
                 for (int y = 0; y < Height; y++)
-                    Elements[x, y] = new MapElement(5);
+                    Elements[x, y] = new MapElement();
         }
+
         public void SaveToStream(Stream stream)
         {
             using (var writer = new StreamWriter(stream))
@@ -44,13 +47,14 @@ namespace DoWayLibrary
                     for (int x = 0; x < Width; x++)
                     {
                         var element = Elements[x, y];
-                        writer.Write(element?.ToDataString() ?? "-1");
+                        writer.Write(element.ToDataString());
                         if (x < Width - 1) writer.Write(",");
                     }
                     writer.WriteLine();
                 }
             }
         }
+
         public static Map LoadFromStream(Stream stream)
         {
             using (var reader = new StreamReader(stream))
@@ -71,10 +75,10 @@ namespace DoWayLibrary
                         }
                     }
                 }
-
                 return map;
             }
         }
+
         public void GenerateTreesWithMask(int treeSpriteCount, int chancePerCell, Dictionary<int, ushort> spriteAvailability, Random random)
         {
             if (chancePerCell <= 0 || spriteAvailability == null) return;
@@ -85,8 +89,7 @@ namespace DoWayLibrary
                 {
                     var element = Elements[x, y];
 
-                    if (element == null || !spriteAvailability.ContainsKey(element.SpriteIndex))
-                        continue;
+                    if (element == null || !spriteAvailability.ContainsKey(element.SpriteIndex)) continue;
 
                     ushort availableMask = spriteAvailability[element.SpriteIndex];
 
@@ -110,32 +113,29 @@ namespace DoWayLibrary
             return x >= 0 && x < Width && y >= 0 && y < Height;
         }
     }
+
     public class MapElement
     {
         public int SpriteIndex { get; set; }
         public List<AdditionalSprite> AdditionalSprites { get; set; } = new List<AdditionalSprite>();
-        public MapElement()
-        {
-            SpriteIndex = 5; 
-        }
-        public MapElement(int spriteIndex)
-        {
-            SpriteIndex = spriteIndex;
-        }
-        public static MapElement CreateEmpty()
+
+        public MapElement() => SpriteIndex = 5;
+
+        public MapElement(int spriteIndex) => SpriteIndex = spriteIndex;
+        public static MapElement CreateEmpty() 
         {
             return new MapElement { SpriteIndex = 5 };
         }
-        public string ToDataString()
-        {
-            return SpriteIndex.ToString();
-        }
+
+        public string ToDataString() => SpriteIndex.ToString();
     }
+
     public class AdditionalSprite
     {
         public int SpriteIndex { get; set; }
         public Point LocalPosition { get; set; }
     }
+
     public class SpriteSelector
     {
         private readonly Bitmap _spriteSheet;
@@ -152,8 +152,8 @@ namespace DoWayLibrary
         public void Render(TableLayoutPanel panel, Action<int> onSpriteSelected)
         {
             panel.Controls.Clear();
-
             int totalSprites = (_spriteSheet.Width / _spriteWidth) * (_spriteSheet.Height / _spriteHeight);
+
             for (int i = 0; i < totalSprites; i++)
             {
                 var pictureBox = new PictureBox
@@ -165,24 +165,24 @@ namespace DoWayLibrary
                     Tag = i
                 };
 
-                pictureBox.Paint += (s, e) =>
-                {
-                    var index = (int)((PictureBox)s).Tag;
-                    int col = index % (_spriteSheet.Width / _spriteWidth);
-                    int row = index / (_spriteSheet.Width / _spriteWidth);
-                    e.Graphics.DrawImage(_spriteSheet,
-                        new Rectangle(0, 0, pictureBox.Width, pictureBox.Height),
-                        new Rectangle(col * _spriteWidth, row * _spriteHeight, _spriteWidth, _spriteHeight),
-                        GraphicsUnit.Pixel);
-                };
-
-                pictureBox.Click += (s, e) =>
-                {
-                    onSpriteSelected?.Invoke((int)((PictureBox)s).Tag);
-                };
+                pictureBox.Paint += (s, e) => DrawSpriteOnPictureBox((PictureBox)s, e);
+                pictureBox.Click += (s, e) => onSpriteSelected?.Invoke((int)((PictureBox)s).Tag);
 
                 panel.Controls.Add(pictureBox);
             }
+        }
+
+        private void DrawSpriteOnPictureBox(PictureBox pictureBox, PaintEventArgs e)
+        {
+            int index = (int)pictureBox.Tag;
+            int col = index % (_spriteSheet.Width / _spriteWidth);
+            int row = index / (_spriteSheet.Width / _spriteWidth);
+
+            e.Graphics.DrawImage(
+                _spriteSheet,
+                new Rectangle(0, 0, pictureBox.Width, pictureBox.Height),
+                new Rectangle(col * _spriteWidth, row * _spriteHeight, _spriteWidth, _spriteHeight),
+                GraphicsUnit.Pixel);
         }
 
         public void DrawSprite(Graphics graphics, Rectangle rect, int spriteIndex)
@@ -200,11 +200,11 @@ namespace DoWayLibrary
 
         public int SpriteCount => (_spriteSheet.Width / _spriteWidth) * (_spriteSheet.Height / _spriteHeight);
     }
+
     public class MapViewport
     {
         public PointF Offset { get; set; } = new PointF(0, 0);
         public float ZoomFactor { get; set; } = 1.0f;
-
         private PointF _dragStartPoint;
         private bool _isDragging;
 
@@ -221,15 +221,11 @@ namespace DoWayLibrary
             Offset = new PointF(currentPoint.X - _dragStartPoint.X, currentPoint.Y - _dragStartPoint.Y);
         }
 
-        public void EndDrag()
-        {
-            _isDragging = false;
-        }
+        public void EndDrag() => _isDragging = false;
 
         public void UpdateZoom(float delta)
         {
-            ZoomFactor += delta;
-            if (ZoomFactor < 0.1f) ZoomFactor = 0.1f;
+            ZoomFactor = Math.Max(0.1f, ZoomFactor + delta);
         }
 
         public Point TransformToMap(Point screenPoint)
