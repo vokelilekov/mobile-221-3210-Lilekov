@@ -1,0 +1,26 @@
+﻿<Window x:Class="MahjongGame.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Маджонг" Height="600" Width="800" Background="#FAF3E0">
+    <Grid>
+        <!-- Фон для игрового поля -->
+        <Border Background="#DCEAE0" BorderBrush="#B5C9B8" BorderThickness="3" CornerRadius="10" Margin="10">
+            <Canvas x:Name="GameCanvas" Width="600" Height="400" Background="Transparent" 
+                    HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"/>
+        </Border>
+
+        <!-- Поле сбора -->
+        <Border Background="#FFF9E6" BorderBrush="#F1D1A9" BorderThickness="3" CornerRadius="10" 
+                HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10" Width="600" Height="100">
+            <StackPanel x:Name="CollectionFieldPanel" Orientation="Horizontal" HorizontalAlignment="Center" Background="Transparent"/>
+        </Border>
+
+        <!-- Кнопка -->
+        <Button Content="Начать игру" HorizontalAlignment="Right" VerticalAlignment="Top" Click="StartNewGame"
+                Width="150" Height="50" Margin="10" FontSize="16" FontWeight="Bold" Foreground="Black" Background="#FFD580">
+            <Button.Effect>
+                <DropShadowEffect ShadowDepth="2" BlurRadius="5" Color="Gray"/>
+            </Button.Effect>
+        </Button>
+    </Grid>
+</Window>

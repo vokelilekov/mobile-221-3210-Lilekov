@@ -1,0 +1,52 @@
+﻿<Window x:Class="WpfBinding.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfBinding"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="300">
+    <Window.Resources>
+        <local:Hero x:Key="myHero"
+                    Name="Alladin"
+                    Clan="Thiefs"
+                    HP="85"/>
+    </Window.Resources>
+    <StackPanel>
+        <TextBox
+            x:Name="edFIO"
+            Text="Иванов Иван Иванович"
+            FontSize="20"/>
+        <TextBlock
+            Text="{Binding ElementName=edFIO, Path=Text}"/>
+        <TextBlock
+            Text="{Binding ElementName=edFIO, Path=Text,
+                           StringFormat='Доброе утро, {0} !!!'}"/>
+
+        <StackPanel
+    Background="Lavender"
+    Margin="10"
+    DataContext="{DynamicResource myHero}">
+            <TextBlock Text="{Binding Name}"/>
+            <TextBlock Text="{Binding Clan}"/>
+            <TextBlock Text="{Binding HP}"/>
+        </StackPanel>
+
+        <StackPanel
+    Background="Gold"
+    Margin="10"
+    DataContext="{DynamicResource myHero}">
+            <TextBox Text="{Binding Name}"/>
+            <TextBox Text="{Binding Clan}"/>
+            <TextBox Text="{Binding HP}"/>
+        </StackPanel>
+
+        <Button 
+            Content="Подробно о герое" 
+            Click="Button_Click"/>
+        <Button
+            Content="Изменить HP"
+            Click="Button_Click1"/>
+    </StackPanel>
+
+</Window>

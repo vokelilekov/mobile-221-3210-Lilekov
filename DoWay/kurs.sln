@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoWayWPF", "DoWayWPF\DoWayWPF.csproj", "{62593F90-2367-4438-88F6-5B20C7D91A92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoWayLibrary", "DoWayLibrary\DoWayLibrary.csproj", "{270A8FF7-57AA-4534-B100-9A3E02F898BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoWayWinForms", "DoWayWinForms\DoWayWinForms.csproj", "{F572756C-F40D-4B80-ADF9-B20FC4CBC736}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62593F90-2367-4438-88F6-5B20C7D91A92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62593F90-2367-4438-88F6-5B20C7D91A92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62593F90-2367-4438-88F6-5B20C7D91A92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62593F90-2367-4438-88F6-5B20C7D91A92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{270A8FF7-57AA-4534-B100-9A3E02F898BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{270A8FF7-57AA-4534-B100-9A3E02F898BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{270A8FF7-57AA-4534-B100-9A3E02F898BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{270A8FF7-57AA-4534-B100-9A3E02F898BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F572756C-F40D-4B80-ADF9-B20FC4CBC736}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F572756C-F40D-4B80-ADF9-B20FC4CBC736}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F572756C-F40D-4B80-ADF9-B20FC4CBC736}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F572756C-F40D-4B80-ADF9-B20FC4CBC736}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

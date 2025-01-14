@@ -1,0 +1,74 @@
+﻿<Window x:Class="DoWayWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DoWayWPF" Height="1080" Width="1920"
+        Background="#1E1E1E" Foreground="#D4D4D4" FontFamily="Segoe UI" FontSize="14">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Верхняя панель -->
+        <DockPanel Grid.Row="0" Grid.ColumnSpan="2" Background="#252526" Height="50" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5">
+                <Button Content="Сохранить карту" Width="150" Click="SaveMap_Click" Margin="5,0"
+                        Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#3C3C3C" />
+                <Button Content="Загрузить карту" Width="150" Click="LoadMap_Click" Margin="5,0"
+                        Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#3C3C3C" />
+                <Button Content="Экспортировать в PNG" Width="170" Click="ExportToPng_Click" Margin="5,0"
+                        Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#3C3C3C" />
+                <Button Content="Добавить деревья" Click="AddTrees_Click" Width="150" Margin="5,0"
+                        Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#3C3C3C" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5">
+                <TextBlock Text="Размер карты:" VerticalAlignment="Center" Margin="5,0" Foreground="#D4D4D4"/>
+                <TextBox Name="MapWidthInput" Width="50" Text="10" HorizontalAlignment="Center" Margin="5,0"
+                         Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#D4D4D4"/>
+                <TextBlock Text="x" VerticalAlignment="Center" Margin="5,0" Foreground="#D4D4D4"/>
+                <TextBox Name="MapHeightInput" Width="50" Text="10" HorizontalAlignment="Center" Margin="5,0"
+                         Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#D4D4D4"/>
+                <Button Content="Применить" Width="120" Click="SetMapSize_Click" Margin="5,0"
+                        Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#3C3C3C" />
+                <Button Content="Очистить карту" Width="150" Click="ClearMap_Click" Margin="5,0"
+                        Background="#3C3C3C" Foreground="#D4D4D4" BorderBrush="#3C3C3C" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Поле карты -->
+        <Grid Name="MapGrid" Grid.Row="1" Grid.Column="0" Background="#252526" Margin="0,0,10,0">
+            <Canvas Name="MapCanvas" Background="#2D2D30" Width="1200" Height="800"
+                    MouseLeftButtonDown="MapCanvas_MouseLeftButtonDown"
+                    MouseWheel="MapCanvas_MouseWheel"
+                    MouseMove="MapCanvas_MouseMove"
+                    MouseLeftButtonUp="MapCanvas_MouseLeftButtonUp"
+                    MouseRightButtonDown="MapCanvas_MouseRightButtonDown"
+                    MouseRightButtonUp="MapCanvas_MouseRightButtonUp"/>
+        </Grid>
+
+        <!-- Панель выбора элементов -->
+        <StackPanel Grid.Row="1" Grid.Column="1" Background="#2D2D30" Margin="0,0,0,0">
+            <Label Content="Выбор элемента" FontWeight="Bold" HorizontalAlignment="Center" Margin="10"
+                   Foreground="#D4D4D4"/>
+            <ScrollViewer x:Name="SpriteSelectorContainer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="10" Width="390">
+                <StackPanel>
+                    <UniformGrid x:Name="SpriteSelectorGrid" Columns="3" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                    <Label Content="Текущий элемент" FontWeight="Bold" HorizontalAlignment="Center" Margin="10"
+                    Foreground="#D4D4D4"/>
+                    <Border x:Name="SelectedSpritePreview" 
+                    Width="256" 
+                    Height="256" 
+                    Margin="0,0,0,10" 
+                    BorderBrush="Black" 
+                    BorderThickness="1"
+                    Background="LightGray" />       
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+    </Grid>
+</Window>
