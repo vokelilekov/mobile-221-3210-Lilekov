@@ -117,7 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
+  <data name="richTextBox1.Text" xml:space="preserve">
+    <value>Основные функции программы:
+
+1. Кнопка 'Сохранить карту' сохраняет текущую карту в файл формата .map.
+
+2. Кнопка 'Загрузить карту' загружает карту из указанного файла.
+
+3. Кнопка 'Экспортировать в PNG' сохраняет карту как изображение.
+
+4. Для рисования линий удерживайте ЛКМ, а для прямоугольников зажмите CTRL и ЛКМ.
+
+5. Ластик используется для удаления элементов карты.
+
+6. Для перемещения по карте используйте зажатый ПКМ.
+
+7. Для зума карты используйте колесико мыши
+</value>
+  </data>
 </root>

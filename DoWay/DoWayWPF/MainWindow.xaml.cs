@@ -24,6 +24,7 @@ namespace DoWayWPF
         private int _selectedSpriteIndex = -1;
         private Rect[] spriteRects;
         private Point _startPoint;
+        private Point _rectangleEndPoint;
         private Random _random = new Random();
         private Dictionary<int, ushort> spriteAvailability = new Dictionary<int, ushort>()
         {
@@ -43,15 +44,13 @@ namespace DoWayWPF
         private BitmapImage _treeSpriteSheet;
         private Rect[] _treeSpriteRects;
         private bool _isDrawing = false;
+        private bool _isDrawingRectangle = false;
         private List<Point> _temporaryLine = new List<Point>();
+        private List<Point> _temporaryRectangle = new List<Point>();
         private bool _isMovingMap = false;
         private Point? _mapMoveStartPoint = null;
         private bool _isSingleClick = true;
         private bool? _isHorizontal = null;
-        private List<System.Drawing.Point> ConvertToDrawingPoints(List<Point> points)
-        {
-            return points.ConvertAll(point => new System.Drawing.Point((int)point.X, (int)point.Y));
-        }
         public MainWindow()
         {
             InitializeComponent();
@@ -227,88 +226,130 @@ namespace DoWayWPF
         }
         private void MapCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _isDrawing = true;
-            _isSingleClick = true;
-            _isHorizontal = null;
-            _temporaryLine.Clear();
-
-            Point clickPosition = e.GetPosition(MapCanvas);
-            int x = (int)(clickPosition.X / _cellSize);
-            int y = (int)(clickPosition.Y / _cellSize);
-
-            _startPoint = new Point(x, y);
-            _temporaryLine.Add(_startPoint);
-
-            if (_selectedSpriteIndex != 0 && _selectedSpriteIndex != 3)
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                _map.SetElement(x, y, new MapElement(_selectedSpriteIndex));
-                RenderMap();
-                _isDrawing = false;
-                return;
-            }
+                _isDrawingRectangle = true;
+                _temporaryRectangle.Clear();
 
-            int initialSpriteIndex = _selectedSpriteIndex == 3 ? 3 : 0;
-            _map.SetElement(x, y, new MapElement(initialSpriteIndex));
-            RenderMap();
+                Point clickPosition = e.GetPosition(MapCanvas);
+                int startX = (int)(clickPosition.X / _cellSize);
+                int startY = (int)(clickPosition.Y / _cellSize);
+
+                _startPoint = new Point(startX, startY);
+                _rectangleEndPoint = _startPoint;
+            }
+            else
+            {
+                _isDrawing = true;
+                _isSingleClick = true;
+                _isHorizontal = null;
+                _temporaryLine.Clear();
+
+                Point clickPosition = e.GetPosition(MapCanvas);
+                int x = (int)(clickPosition.X / _cellSize);
+                int y = (int)(clickPosition.Y / _cellSize);
+
+                _startPoint = new Point(x, y);
+                _temporaryLine.Add(_startPoint);
+            }
         }
         private void MapCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_isMovingMap && _mapMoveStartPoint.HasValue && e.RightButton == MouseButtonState.Pressed)
-            {
-                Point currentPosition = e.GetPosition(MapGrid);
-                double offsetX = currentPosition.X - _mapMoveStartPoint.Value.X;
-                double offsetY = currentPosition.Y - _mapMoveStartPoint.Value.Y;
-
-                TranslateTransform translateTransform = MapCanvas.RenderTransform as TranslateTransform ?? new TranslateTransform();
-                translateTransform.X += offsetX;
-                translateTransform.Y += offsetY;
-
-                MapCanvas.RenderTransform = translateTransform;
-                _mapMoveStartPoint = currentPosition;
-            }
-
             if (_isDrawing && e.LeftButton == MouseButtonState.Pressed)
             {
                 Point currentPosition = e.GetPosition(MapCanvas);
                 int x = (int)(currentPosition.X / _cellSize);
                 int y = (int)(currentPosition.Y / _cellSize);
 
-                if (_temporaryLine.Count > 0 && _temporaryLine[_temporaryLine.Count - 1].X == x && _temporaryLine[_temporaryLine.Count - 1].Y == y)
+                if (_temporaryLine.Count > 0 &&
+                    _temporaryLine[_temporaryLine.Count - 1].X == x &&
+                    _temporaryLine[_temporaryLine.Count - 1].Y == y)
                     return;
 
-                if (_isHorizontal == null)
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 {
-                    if (x != _startPoint.X) _isHorizontal = true;
-                    else if (y != _startPoint.Y) _isHorizontal = false;
+                    _temporaryLine.Clear();
+
+                    int startX = (int)_startPoint.X;
+                    int startY = (int)_startPoint.Y;
+
+                    for (int i = Math.Min(startX, x); i <= Math.Max(startX, x); i++)
+                    {
+                        _temporaryLine.Add(new Point(i, startY));
+                        _temporaryLine.Add(new Point(i, y)); 
+                    }
+                    for (int i = Math.Min(startY, y); i <= Math.Max(startY, y); i++)
+                    {
+                        _temporaryLine.Add(new Point(startX, i));
+                        _temporaryLine.Add(new Point(x, i)); 
+                    }
+                }
+                else
+                {
+                    if (_isHorizontal == null)
+                    {
+                        if (Math.Abs(x - _startPoint.X) >= Math.Abs(y - _startPoint.Y))
+                            _isHorizontal = true;
+                        else
+                            _isHorizontal = false;
+                    }
+
+                    if (_isHorizontal == true && y == (int)_startPoint.Y)
+                    {
+                        _temporaryLine.Add(new Point(x, y));
+                    }
+                    else if (_isHorizontal == false && x == (int)_startPoint.X)
+                    {
+                        _temporaryLine.Add(new Point(x, y));
+                    }
                 }
 
-                if (_isHorizontal == true && y != _startPoint.Y)
-                    return;
-
-                if (_isHorizontal == false && x != _startPoint.X)
-                    return;
-
-                int spriteIndex = _isHorizontal == true ? 0 : 3;
-
-                _temporaryLine.Add(new Point(x, y));
-                _map.SetElement(x, y, new MapElement(spriteIndex));
-                RenderMap();
-                _isSingleClick = false;
+                RenderTemporaryFigure();
             }
         }
+        private void RenderTemporaryFigure()
+        {
+            MapCanvas.Children.Clear();
+            RenderMap();
+
+            foreach (var point in _temporaryLine)
+            {
+                Rectangle tempRect = new Rectangle
+                {
+                    Width = _cellSize,
+                    Height = _cellSize,
+                    Fill = new SolidColorBrush(Color.FromArgb(128, 0, 0, 255)), 
+                    Stroke = Brushes.Blue,
+                    StrokeThickness = 1
+                };
+
+                Canvas.SetLeft(tempRect, point.X * _cellSize);
+                Canvas.SetTop(tempRect, point.Y * _cellSize);
+                MapCanvas.Children.Add(tempRect);
+            }
+        }
+       
         private void MapCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (_isDrawing)
             {
-                _isDrawing = false;
-                if (_temporaryLine.Count > 1 && _temporaryLine[_temporaryLine.Count - 1] == _startPoint)
+                if (_isDrawing)
                 {
-                    foreach (var point in _temporaryLine)
-                    {
-                        int x = (int)point.X;
-                        int y = (int)point.Y;
+                    _isDrawing = false;
 
-                        _map.SetElement(x, y, new MapElement(5));
+                    if (_temporaryLine.Count > 0)
+                    {
+                        foreach (var point in _temporaryLine)
+                        {
+                            int x = (int)point.X;
+                            int y = (int)point.Y;
+
+                            if (_map.IsValidPosition(x, y))
+                            {
+                                int spriteIndex = GetRoadSpriteIndex(x, y);
+                                _map.SetElement(x, y, new MapElement(spriteIndex));
+                            }
+                        }
                     }
 
                     _temporaryLine.Clear();
@@ -330,13 +371,21 @@ namespace DoWayWPF
                 }
                 else if (_temporaryLine.Count > 0)
                 {
-                    var drawingPoints = ConvertToDrawingPoints(_temporaryLine);
-                  
+                    foreach (var point in _temporaryLine)
+                    {
+                        int x = (int)point.X;
+                        int y = (int)point.Y;
+
+                        int spriteIndex = GetRoadSpriteIndex(x, y);
+                        _map.SetElement(x, y, new MapElement(spriteIndex));
+                    }
+
                     _temporaryLine.Clear();
                     RenderMap();
                 }
             }
         }
+
         private void MapCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             _isMovingMap = true;
@@ -639,5 +688,29 @@ namespace DoWayWPF
             }
             RenderMap(); 
         }
+        private int GetRoadSpriteIndex(int x, int y)
+        {
+            if (_map == null || !_map.IsValidPosition(x, y)) return EmptySpriteIndex;
+
+            bool hasTop = _map.IsValidPosition(x, y - 1) && _map.Elements[x, y - 1]?.SpriteIndex != EmptySpriteIndex;
+            bool hasBottom = _map.IsValidPosition(x, y + 1) && _map.Elements[x, y + 1]?.SpriteIndex != EmptySpriteIndex;
+            bool hasLeft = _map.IsValidPosition(x - 1, y) && _map.Elements[x - 1, y]?.SpriteIndex != EmptySpriteIndex;
+            bool hasRight = _map.IsValidPosition(x + 1, y) && _map.Elements[x + 1, y]?.SpriteIndex != EmptySpriteIndex;
+
+            if (hasTop && hasBottom && hasLeft && hasRight) return 2; // Перекресток
+            if (hasTop && hasBottom && hasLeft) return 11; // T-образный перекресток (влево)
+            if (hasTop && hasBottom && hasRight) return 8; // T-образный перекресток (вправо)
+            if (hasLeft && hasRight && hasTop) return 9; // T-образный перекресток (вверх)
+            if (hasLeft && hasRight && hasBottom) return 10; // T-образный перекресток (вниз)
+            if (hasLeft && hasRight) return 0; // Горизонтальная дорога
+            if (hasTop && hasBottom) return 3; // Вертикальная дорога
+            if (hasTop && hasRight) return 1; // Угол вверх-вправо
+            if (hasTop && hasLeft) return 4; // Угол вверх-влево
+            if (hasBottom && hasRight) return 6; // Угол вниз-вправо
+            if (hasBottom && hasLeft) return 7; // Угол вниз-влево
+
+            return EmptySpriteIndex;
+        }
+
     }
 }

@@ -13,7 +13,7 @@ namespace DoWayWinForms
         private const int CellSize = 50;
         private const int EmptySpriteIndex = 5;
         private Bitmap _spriteSheet;
-        private int _selectedSpriteIndex = -1;
+        private int _selectedSpriteIndex = 5;
         private readonly MapViewport _viewport = new MapViewport();
         private SpriteSelector _spriteSelector;
         private Random _random = new Random();
@@ -36,12 +36,16 @@ namespace DoWayWinForms
         private Rectangle[] _treeSpriteRects;
         private bool _isDrawingLine = false;
         private List<Point> _temporaryLine = new List<Point>();
+        private List<Point> _temporaryRectangle = new List<Point>();
         private Point _startPoint;
         private bool? _isHorizontal = null;
         private bool _isLineStart = false;
         private Timer _mouseDownTimer;
         private const int MouseHoldThreshold = 300;
-
+        private PictureBox selectedSpritePreview;
+        private bool _isDrawingRectangle = false;
+        private Point _rectangleStartPoint;
+        private bool _isCtrlPressed = false;
         public Form1()
         {
             InitializeComponent();
@@ -50,12 +54,18 @@ namespace DoWayWinForms
             LoadSpriteSheet();
             LoadTreeSpriteSheet();
             InitializeMap(10, 10);
+            CenterMapOnPanel();
             ApplyDarkTheme(this);
-            StyleButtonsInToolbar();
+            selectedSpritePreview = pictureBoxSelectedSprite;
 
             _mouseDownTimer = new Timer();
             _mouseDownTimer.Interval = MouseHoldThreshold;
             _mouseDownTimer.Tick += MouseDownTimer_Tick;
+            panelMap.Resize += PanelMap_Resize;
+        }
+        private void PanelMap_Resize(object sender, EventArgs e)
+        {
+            CenterMapOnPanel();
         }
         private void ApplyDarkTheme(Control parent)
         {
@@ -92,40 +102,38 @@ namespace DoWayWinForms
                     listBox.BackColor = Color.FromArgb(30, 30, 30);
                     listBox.ForeColor = Color.White;
                 }
+                else if (control is MenuStrip menuStrip)
+                {
+                    menuStrip.BackColor = Color.FromArgb(45, 45, 48);
+                    menuStrip.ForeColor = Color.White;
+                    foreach (ToolStripMenuItem menuItem in menuStrip.Items)
+                    {
+                        ApplyDarkThemeToMenuItems(menuItem);
+                    }
+                }
                 ApplyDarkTheme(control);
             }
+
             if (parent is Form form)
             {
                 form.BackColor = Color.FromArgb(30, 30, 30);
             }
         }
-        private void StyleButton(Button button)
+        private void ApplyDarkThemeToMenuItems(ToolStripMenuItem menuItem)
         {
-            button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderSize = 0;
-            button.BackColor = Color.FromArgb(63, 63, 70);
-            button.ForeColor = Color.White;
+            menuItem.BackColor = Color.FromArgb(45, 45, 48);
+            menuItem.ForeColor = Color.White;
 
-            button.MouseEnter += (s, e) => button.BackColor = Color.FromArgb(90, 90, 90);
-            button.MouseLeave += (s, e) => button.BackColor = Color.FromArgb(63, 63, 70);
-            button.MouseDown += (s, e) => button.BackColor = Color.FromArgb(45, 45, 48);
-            button.MouseUp += (s, e) => button.BackColor = Color.FromArgb(90, 90, 90);
-        }
-        private void StyleButtonsInToolbar()
-        {
-            foreach (Control control in panelToolBar.Controls)
+            foreach (ToolStripItem subItem in menuItem.DropDownItems)
             {
-                if (control is Button button)
+                if (subItem is ToolStripMenuItem subMenuItem)
                 {
-                    StyleButton(button);
+                    ApplyDarkThemeToMenuItems(subMenuItem);
                 }
             }
         }
         private void InitializeUI()
         {
-            panelToolBar.Dock = DockStyle.Top;
-            panelToolBar.Height = 50;
-
             panelMap.Dock = DockStyle.Fill;
             panelMap.BackColor = Color.DarkGray;
             panelMap.Paint += PanelMap_Paint;
@@ -171,22 +179,67 @@ namespace DoWayWinForms
             FillMapWithEmpty();
             panelMap.Invalidate();
         }
+        private void CenterMapOnPanel()
+        {
+            if (_map == null || panelMap == null) return;
+
+            int mapWidthInPixels = _map.Width * CellSize;
+            int mapHeightInPixels = _map.Height * CellSize;
+
+            int panelWidth = panelMap.Width;
+            int panelHeight = panelMap.Height;
+
+            float offsetX = (panelWidth - mapWidthInPixels) / 2f;
+            float offsetY = (panelHeight - mapHeightInPixels) / 2f;
+
+            _viewport.Offset = new PointF(offsetX, offsetY);
+
+            panelMap.Invalidate();
+        }
         private void RenderSpriteSelector()
         {
             var tableLayoutPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
                 ColumnCount = 3,
-                RowCount = 4,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
             };
 
-            _spriteSelector.Render(tableLayoutPanel, index =>
+            for (int i = 0; i < _spriteSelector.SpriteCount; i++)
             {
-                _selectedSpriteIndex = index;
-                HighlightSelectedSprite(index);
-            });
+                if (i == EmptySpriteIndex) continue;
+
+                var pictureBox = new PictureBox
+                {
+                    Width = 80,
+                    Height = 80,
+                    Margin = new Padding(5),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    Tag = i
+                };
+
+                pictureBox.Paint += (s, e) =>
+                {
+                    var index = (int)((PictureBox)s).Tag;
+                    int col = index % (_spriteSheet.Width / 256);
+                    int row = index / (_spriteSheet.Width / 256);
+                    e.Graphics.DrawImage(
+                        _spriteSheet,
+                        new Rectangle(0, 0, pictureBox.Width, pictureBox.Height),
+                        new Rectangle(col * 256, row * 256, 256, 256),
+                        GraphicsUnit.Pixel
+                    );
+                };
+
+                pictureBox.Click += (s, e) =>
+                {
+                    _selectedSpriteIndex = (int)((PictureBox)s).Tag;
+                    HighlightSelectedSprite(_selectedSpriteIndex);
+                };
+
+                tableLayoutPanel.Controls.Add(pictureBox);
+            }
 
             panelSprites.Controls.Clear();
             panelSprites.Controls.Add(tableLayoutPanel);
@@ -210,6 +263,32 @@ namespace DoWayWinForms
                                 : Color.Transparent;
                         }
                     }
+                }
+            }
+
+            foreach (Control control in panelSprites.Controls)
+            {
+                if (control is Button button && button.Text == "Ластик")
+                {
+                    button.BackColor = index == -1 ? Color.Red : Color.FromArgb(63, 63, 70);
+                }
+            }
+            UpdateSelectedSpritePreview(index);
+        }
+        private void HighlightRectangle(Point start, Point end)
+        {
+            _temporaryRectangle.Clear();
+
+            int minX = Math.Min(start.X, end.X);
+            int maxX = Math.Max(start.X, end.X);
+            int minY = Math.Min(start.Y, end.Y);
+            int maxY = Math.Max(start.Y, end.Y);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    _temporaryRectangle.Add(new Point(x, y));
                 }
             }
         }
@@ -258,6 +337,16 @@ namespace DoWayWinForms
                     e.Graphics.DrawRectangle(Pens.Blue, rect);
                 }
             }
+
+            if (_isDrawingRectangle && _temporaryRectangle.Count > 0)
+            {
+                foreach (var point in _temporaryRectangle)
+                {
+                    var rect = new Rectangle(point.X * CellSize, point.Y * CellSize, CellSize, CellSize);
+                    e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(128, Color.LightGreen)), rect);
+                    e.Graphics.DrawRectangle(Pens.Green, rect);
+                }
+            }
         }
         private void PanelMap_MouseClick(object sender, MouseEventArgs e)
         {
@@ -304,31 +393,46 @@ namespace DoWayWinForms
         {
             if (e.Button == MouseButtons.Left)
             {
-                _mouseDownTimer.Start();
-                _isDrawingLine = true;
-                _isLineStart = true;
-                _temporaryLine.Clear();
-                _isHorizontal = null;
-
-                var mapPoint = _viewport.TransformToMap(e.Location);
-                _startPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
-
-                if (_map.IsValidPosition(_startPoint.X, _startPoint.Y))
+                if (Control.ModifierKeys == Keys.Control)
                 {
-                    _temporaryLine.Add(_startPoint);
+                    _isDrawingRectangle = true;
+                    var mapPoint = _viewport.TransformToMap(e.Location);
+                    _rectangleStartPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
                 }
+                else
+                {
+                    _mouseDownTimer.Start();
+                    _isDrawingLine = true;
+                    _isLineStart = true;
+                    _temporaryLine.Clear();
+                    _isHorizontal = null;
 
-                panelMap.Invalidate();
+                    var mapPoint = _viewport.TransformToMap(e.Location);
+                    _startPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
+
+                    if (_map.IsValidPosition(_startPoint.X, _startPoint.Y))
+                    {
+                        _temporaryLine.Add(_startPoint);
+                    }
+
+                    panelMap.Invalidate();
+                }
             }
             else if (e.Button == MouseButtons.Right)
             {
-                _viewport.StartDrag(e.Location); // Начало перемещения карты
+                _viewport.StartDrag(e.Location);
             }
         }
-
         private void PanelMap_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_isDrawingLine && e.Button == MouseButtons.Left)
+            if (_isDrawingRectangle && e.Button == MouseButtons.Left)
+            {
+                var mapPoint = _viewport.TransformToMap(e.Location);
+                var rectangleEndPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
+                HighlightRectangle(_rectangleStartPoint, rectangleEndPoint);
+                panelMap.Invalidate();
+            }
+            else if (_isDrawingLine && e.Button == MouseButtons.Left)
             {
                 var mapPoint = _viewport.TransformToMap(e.Location);
                 var currentPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
@@ -366,7 +470,6 @@ namespace DoWayWinForms
                 panelMap.Invalidate();
             }
         }
-
         private void MouseDownTimer_Tick(object sender, EventArgs e)
         {
             _mouseDownTimer.Stop();
@@ -382,6 +485,15 @@ namespace DoWayWinForms
         {
             if (e.Button == MouseButtons.Left)
             {
+                if (_isDrawingRectangle)
+                {
+                    var mapPoint = _viewport.TransformToMap(e.Location);
+                    var rectangleEndPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
+                    DrawRectangle(_rectangleStartPoint, rectangleEndPoint);
+                    _isDrawingRectangle = false;
+                    panelMap.Invalidate();
+                }
+
                 if (_isDrawingLine)
                 {
                     if (_temporaryLine.Count > 1)
@@ -392,7 +504,7 @@ namespace DoWayWinForms
                             {
                                 if (_map.IsValidPosition(point.X, point.Y))
                                 {
-                                    _map.SetElement(point.X, point.Y, new MapElement(EmptySpriteIndex));
+                                    _map.SetElement(point.X, point.Y, new MapElement(-1));
                                 }
                             }
                         }
@@ -404,6 +516,7 @@ namespace DoWayWinForms
                                 {
                                     int spriteIndex = _isHorizontal == true ? 0 : 3;
                                     _map.SetElement(point.X, point.Y, new MapElement(spriteIndex));
+                                    UpdateRoadConnections(point.X, point.Y);
                                 }
                             }
                         }
@@ -417,7 +530,6 @@ namespace DoWayWinForms
                         }
                     }
                 }
-
                 _temporaryLine.Clear();
                 _isHorizontal = null;
                 _isDrawingLine = false;
@@ -427,29 +539,6 @@ namespace DoWayWinForms
             else if (e.Button == MouseButtons.Right)
             {
                 _viewport.EndDrag();
-            }
-        }
-
-        private void btnSaveMap_Click(object sender, EventArgs e)
-        {
-            SaveFile("Map Files (*.map)|*.map", stream => _map.SaveToStream(stream));
-        }
-        private void btnLoadMap_Click(object sender, EventArgs e)
-        {
-            OpenFile("Map Files (*.map)|*.map", stream =>
-            {
-                _map = Map.LoadFromStream(stream);
-                panelMap.Invalidate();
-            });
-        }
-        private void btnExportToPng_Click(object sender, EventArgs e)
-        {
-            using (var saveFileDialog = new SaveFileDialog { Filter = "PNG Files (*.png)|*.png" })
-            {
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    ExportMapToPng(saveFileDialog.FileName);
-                }
             }
         }
         private void ExportMapToPng(string filePath)
@@ -462,13 +551,17 @@ namespace DoWayWinForms
 
             try
             {
-                int mapWidth = _map.Width * CellSize; 
-                int mapHeight = _map.Height * CellSize; 
+                int mapWidth = _map.Width * 256;
+                int mapHeight = _map.Height * 256;
 
                 using (var bitmap = new Bitmap(mapWidth, mapHeight))
                 {
                     using (var g = Graphics.FromImage(bitmap))
                     {
+                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                        g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
+
                         g.Clear(Color.DarkGray);
 
                         for (int x = 0; x < _map.Width; x++)
@@ -476,10 +569,25 @@ namespace DoWayWinForms
                             for (int y = 0; y < _map.Height; y++)
                             {
                                 var element = _map.Elements[x, y] ?? MapElement.CreateEmpty();
-                                var rect = new Rectangle(x * CellSize, y * CellSize, CellSize, CellSize);
+                                var rect = new Rectangle(x * 256, y * 256, 256, 256);
 
-                                _spriteSelector.DrawSprite(g, rect, element.SpriteIndex);
-                                g.DrawRectangle(Pens.Black, rect);
+                                if (element.SpriteIndex >= 0 && element.SpriteIndex < _spriteSelector.SpriteCount)
+                                {
+                                    _spriteSelector.DrawSprite(g, rect, element.SpriteIndex);
+                                }
+
+                                foreach (var sprite in element.AdditionalSprites)
+                                {
+                                    var spriteRect = new Rectangle(
+                                        rect.X + sprite.LocalPosition.X * (256 / 4),
+                                        rect.Y + sprite.LocalPosition.Y * (256 / 4),
+                                        256 / 4,
+                                        256 / 4
+                                    );
+
+                                    var sourceRect = _treeSpriteRects[sprite.SpriteIndex];
+                                    g.DrawImage(_treeSpriteSheet, spriteRect, sourceRect, GraphicsUnit.Pixel);
+                                }
                             }
                         }
                     }
@@ -492,17 +600,6 @@ namespace DoWayWinForms
             {
                 MessageBox.Show($"Ошибка при сохранении PNG: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-        private void btnClearMap_Click(object sender, EventArgs e)
-        {
-            if (_map == null)
-            {
-                MessageBox.Show("Карта не создана.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            FillMapWithEmpty();
-            panelMap.Invalidate();
         }
         private void btnSetMapSize_Click(object sender, EventArgs e)
         {
@@ -587,13 +684,233 @@ namespace DoWayWinForms
 
             panelMap.Invalidate();
         }
-        private void btnAddTrees_Click(object sender, EventArgs e)
-        {
-            GenerateTrees();
-        }
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+        private void UpdateSelectedSpritePreview(int index)
+        {
+            int spriteIndex = index == -1 ? EmptySpriteIndex : index;
+
+            if (spriteIndex >= 0 && spriteIndex < _spriteSelector.SpriteCount)
+            {
+                var spriteWidth = 256;
+                var spriteHeight = 256;
+
+                int columns = _spriteSheet.Width / spriteWidth;
+                int col = spriteIndex % columns;
+                int row = spriteIndex / columns;
+
+                var spriteRect = new Rectangle(col * spriteWidth, row * spriteHeight, spriteWidth, spriteHeight);
+
+                var previewImage = new Bitmap(spriteWidth, spriteHeight);
+                using (var g = Graphics.FromImage(previewImage))
+                {
+                    g.DrawImage(_spriteSheet, new Rectangle(0, 0, spriteWidth, spriteHeight), spriteRect, GraphicsUnit.Pixel);
+                }
+
+                selectedSpritePreview.Image = previewImage;
+                selectedSpritePreview.BackColor = Color.Transparent;
+            }
+            else
+            {
+                selectedSpritePreview.Image = null;
+                selectedSpritePreview.BackColor = Color.FromArgb(63, 63, 70);
+            }
+        }
+        private int GetRoadSpriteIndex(int x, int y)
+        {
+            if (_map == null || !_map.IsValidPosition(x, y)) return -1;
+
+            bool hasTop = _map.IsValidPosition(x, y - 1) && IsRoad(_map.Elements[x, y - 1]?.SpriteIndex);
+            bool hasBottom = _map.IsValidPosition(x, y + 1) && IsRoad(_map.Elements[x, y + 1]?.SpriteIndex);
+            bool hasLeft = _map.IsValidPosition(x - 1, y) && IsRoad(_map.Elements[x - 1, y]?.SpriteIndex);
+            bool hasRight = _map.IsValidPosition(x + 1, y) && IsRoad(_map.Elements[x + 1, y]?.SpriteIndex);
+
+            if (hasTop && hasBottom && hasLeft && hasRight) return 2; // Перекрёсток
+            if (hasTop && hasBottom && hasLeft) return 11; // T-образный перекрёсток (влево)
+            if (hasTop && hasBottom && hasRight) return 8; // T-образный перекрёсток (вправо)
+            if (hasLeft && hasRight && hasTop) return 9; // T-образный перекрёсток (вверх)
+            if (hasLeft && hasRight && hasBottom) return 10; // T-образный перекрёсток (вниз)
+            if (hasLeft && hasRight) return 0; // Горизонтальная дорога
+            if (hasTop && hasBottom) return 3; // Вертикальная дорога
+            if (hasTop && hasRight) return 1; // Угол вверх-вправо
+            if (hasTop && hasLeft) return 4; // Угол вверх-влево
+            if (hasBottom && hasRight) return 6; // Угол вниз-вправо
+            if (hasBottom && hasLeft) return 7; // Угол вниз-влево
+
+            return -1;
+        }
+        private bool IsRoad(int? spriteIndex)
+        {
+            return spriteIndex.HasValue && spriteIndex >= 0 && spriteIndex != 5;
+        }
+        private void UpdateRoadConnections(int x, int y)
+        {
+            if (_map == null) return;
+
+            if (_map.Elements[x, y]?.SpriteIndex == 5) return;
+
+            int newSpriteIndex = GetRoadSpriteIndex(x, y);
+            if (newSpriteIndex >= 0)
+            {
+                _map.SetElement(x, y, new MapElement(newSpriteIndex));
+            }
+
+            foreach (var neighbor in new[] { (x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y) })
+            {
+                if (_map.IsValidPosition(neighbor.Item1, neighbor.Item2))
+                {
+                    if (_map.Elements[neighbor.Item1, neighbor.Item2]?.SpriteIndex == 5) continue;
+
+                    int neighborSpriteIndex = GetRoadSpriteIndex(neighbor.Item1, neighbor.Item2);
+                    if (neighborSpriteIndex >= 0)
+                    {
+                        _map.SetElement(neighbor.Item1, neighbor.Item2, new MapElement(neighborSpriteIndex));
+                    }
+                }
+            }
+            panelMap.Invalidate();
+        }
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.ControlKey)
+            {
+                _isDrawingRectangle = true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+        private void DrawRectangle(Point start, Point end)
+        {
+            int minX = Math.Min(start.X, end.X);
+            int maxX = Math.Max(start.X, end.X);
+            int minY = Math.Min(start.Y, end.Y);
+            int maxY = Math.Max(start.Y, end.Y);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    if (x == minX && y == minY)
+                    {
+                        SetElementWithConnections(x, y, 6);
+                    }
+                    else if (x == maxX && y == minY)
+                    {
+                        SetElementWithConnections(x, y, 7);
+                    }
+                    else if (x == minX && y == maxY)
+                    {
+                        SetElementWithConnections(x, y, 1);
+                    }
+                    else if (x == maxX && y == maxY)
+                    {
+                        SetElementWithConnections(x, y, 4);
+                    }
+                    else if (y == minY || y == maxY)
+                    {
+                        SetElementWithConnections(x, y, 0);
+                    }
+                    else if (x == minX || x == maxX)
+                    {
+                        SetElementWithConnections(x, y, 3);
+                    }
+                }
+            }
+        }
+        private void SetElementWithConnections(int x, int y, int defaultSprite)
+        {
+            if (!_map.IsValidPosition(x, y)) return;
+
+            int newSpriteIndex = GetRoadSpriteIndex(x, y);
+            if (newSpriteIndex < 0) newSpriteIndex = defaultSprite;
+            _map.SetElement(x, y, new MapElement(newSpriteIndex));
+            UpdateNeighborConnections(x, y);
+        }
+        private void UpdateNeighborConnections(int x, int y)
+        {
+            int[,] neighbors = {
+            { 0, -1 }, 
+            { 0, 1 }, 
+            { -1, 0 }, 
+            { 1, 0 }
+            };
+
+            for (int i = 0; i < neighbors.GetLength(0); i++)
+            {
+                int nx = x + neighbors[i, 0];
+                int ny = y + neighbors[i, 1];
+
+                if (_map.IsValidPosition(nx, ny) && IsRoad(_map.Elements[nx, ny]?.SpriteIndex))
+                {
+                    int neighborSpriteIndex = GetRoadSpriteIndex(nx, ny);
+                    if (neighborSpriteIndex >= 0)
+                    {
+                        _map.SetElement(nx, ny, new MapElement(neighborSpriteIndex));
+                    }
+                }
+            }
+        }
+        private void Form1_KeyUp_1(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey)
+            {
+                _isDrawingRectangle = false;
+            }
+        }
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control)
+            {
+                _isCtrlPressed = true;
+            }
+        }
+        private void сохранитьКартуToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFile("Map Files (*.map)|*.map", stream => _map.SaveToStream(stream));
+        }
+        private void загрузитьКToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFile("Map Files (*.map)|*.map", stream =>
+            {
+                _map = Map.LoadFromStream(stream);
+                panelMap.Invalidate();
+            });
+        }
+        private void экспортВPNGToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var saveFileDialog = new SaveFileDialog { Filter = "PNG Files (*.png)|*.png" })
+            {
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    ExportMapToPng(saveFileDialog.FileName);
+                }
+            }
+        }
+        private void ластикToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _selectedSpriteIndex = EmptySpriteIndex;
+            HighlightSelectedSprite(-1);
+        }
+        private void очиститьКартуToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_map == null)
+            {
+                MessageBox.Show("Карта не создана.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            FillMapWithEmpty();
+            panelMap.Invalidate();
+        }
+        private void добавитьДеревьяToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GenerateTrees();
+        }
+        private void инструкцияToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var helpForm = new HelpForm();
+            helpForm.ShowDialog();
         }
     }
     public static class ControlExtensions
