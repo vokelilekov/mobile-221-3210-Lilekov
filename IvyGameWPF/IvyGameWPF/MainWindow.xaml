@@ -1,25 +1,59 @@
 ﻿<Window x:Class="MahjongGame.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Маджонг" Height="600" Width="800" Background="#FAF3E0">
+        Title="Маджонг" Height="600" Width="800" Background="#FAF3E0" WindowState="Maximized" SizeChanged="Window_SizeChanged">
     <Grid>
-        <!-- Фон для игрового поля -->
-        <Border Background="#DCEAE0" BorderBrush="#B5C9B8" BorderThickness="3" CornerRadius="10" Margin="10">
+ 
+        <Border Background="#DCEAE0" BorderBrush="#A8C3A0" BorderThickness="3" CornerRadius="15" Margin="10">
             <Canvas x:Name="GameCanvas" Width="600" Height="400" Background="Transparent" 
-                    HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"/>
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Margin="100">
+                <Canvas.Effect>
+                    <DropShadowEffect ShadowDepth="5" BlurRadius="15" Color="#A3B9A2"/>
+                </Canvas.Effect>
+            </Canvas>
+        </Border>
+        <ComboBox x:Name="DifficultySelector" 
+          HorizontalAlignment="Left" VerticalAlignment="Top" 
+          Margin="22,20,0,0" Width="150" Height="30" 
+          SelectionChanged="DifficultySelector_SelectionChanged" 
+          Foreground="#3E4A41" FontWeight="Bold" Cursor="Hand"
+          BorderBrush="#93CD5D" BorderThickness="2" Background="#F9F9F9">
+            <ComboBox.Effect>
+                <DropShadowEffect ShadowDepth="2" BlurRadius="5" Color="#A8C3A0"/>
+            </ComboBox.Effect>
+            <ComboBoxItem Content="Легкий" Tag="Easy" IsSelected="True"/>
+            <ComboBoxItem Content="Средний" Tag="Medium"/>
+            <ComboBoxItem Content="Сложный" Tag="Hard"/>
+        </ComboBox>
+
+        <Border Background="#FFF9E6" BorderBrush="#F1D1A9" BorderThickness="3" CornerRadius="15" 
+                HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="20" Width="600" Height="100">
+            <StackPanel x:Name="CollectionFieldPanel" Orientation="Horizontal" HorizontalAlignment="Center" Background="Transparent">
+                <StackPanel.Effect>
+                    <DropShadowEffect ShadowDepth="5" BlurRadius="10" Color="#C9A786"/>
+                </StackPanel.Effect>
+            </StackPanel>
         </Border>
 
-        <!-- Поле сбора -->
-        <Border Background="#FFF9E6" BorderBrush="#F1D1A9" BorderThickness="3" CornerRadius="10" 
-                HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10" Width="600" Height="100">
-            <StackPanel x:Name="CollectionFieldPanel" Orientation="Horizontal" HorizontalAlignment="Center" Background="Transparent"/>
-        </Border>
-
-        <!-- Кнопка -->
         <Button Content="Начать игру" HorizontalAlignment="Right" VerticalAlignment="Top" Click="StartNewGame"
-                Width="150" Height="50" Margin="10" FontSize="16" FontWeight="Bold" Foreground="Black" Background="#FFD580">
+                Width="150" Height="50" Margin="0,25,25,0" FontSize="16" FontWeight="Bold" Foreground="White" Background="#F4A261"
+                BorderThickness="2" BorderBrush="#E76F51" Cursor="Hand">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Rectangle Fill="{TemplateBinding Background}" RadiusX="10" RadiusY="10"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#E76F51"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
             <Button.Effect>
-                <DropShadowEffect ShadowDepth="2" BlurRadius="5" Color="Gray"/>
+                <DropShadowEffect ShadowDepth="3" BlurRadius="10" Color="#704C24"/>
             </Button.Effect>
         </Button>
     </Grid>
