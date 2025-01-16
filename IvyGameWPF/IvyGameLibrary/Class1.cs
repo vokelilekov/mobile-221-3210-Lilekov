@@ -17,8 +17,8 @@ namespace MahjongGameLibrary
     public enum Difficulty
     {
         Easy = 5,
-        Medium = 10,
-        Hard = 15
+        Medium = 7,
+        Hard = 9
     }
 
     public enum Shape
@@ -33,8 +33,10 @@ namespace MahjongGameLibrary
         private const int TileTypes = 10;
         public int MaxLayers;
         private Shape selectedShape;
+        public bool isWFA;
+        private static readonly Random random = new Random();
 
-        public GameField(Difficulty difficulty, Shape shape, bool ensureSolvable = true)
+        public GameField(Difficulty difficulty, Shape shape, bool ensureSolvable = true, bool isWFA = false)
         {
             MaxLayers = (int)difficulty;
             selectedShape = shape;
@@ -52,20 +54,15 @@ namespace MahjongGameLibrary
 
         private void GenerateSolvableFigure()
         {
-            //do
-            //{
-                Tiles.Clear();
-                GenerateFigureWithLogic();
-                ShuffleTiles();
-                UpdateTileAvailability();
-            //}
-            //while (!IsSolvable());
+            Tiles.Clear();
+            GenerateFigureWithLogic();
+            ShuffleTiles();
+            UpdateTileAvailability();
         }
 
         private void GenerateRandomFigure()
         {
             Tiles.Clear();
-            var random = new Random();
             var typeCounts = new int[TileTypes];
             EnsureTripleTiles(typeCounts);
             GenerateSymmetricalFigures(typeCounts);
@@ -75,7 +72,6 @@ namespace MahjongGameLibrary
 
         private void GenerateFigureWithLogic()
         {
-            var random = new Random();
             var typeCounts = new int[TileTypes];
             EnsureTripleTiles(typeCounts);
             GenerateSymmetricalFigures(typeCounts);
@@ -84,7 +80,7 @@ namespace MahjongGameLibrary
         private void EnsureTripleTiles(int[] typeCounts)
         {
             int totalTiles = MaxLayers * MaxLayers * 3;
-            int repeatsPerType = Math.Max(3, totalTiles / TileTypes);
+            int repeatsPerType = Math.Max(6, totalTiles / TileTypes);
 
             for (int i = 0; i < TileTypes; i++)
             {
@@ -92,7 +88,6 @@ namespace MahjongGameLibrary
             }
 
             int remainingTiles = totalTiles - TileTypes * repeatsPerType;
-            var random = new Random();
 
             while (remainingTiles > 0)
             {
@@ -106,17 +101,79 @@ namespace MahjongGameLibrary
         {
             if (selectedShape == Shape.Pyramid)
             {
-                GeneratePyramid(typeCounts);
+                GeneratePyramidWithIncreasedTriplets(typeCounts);
             }
             else if (selectedShape == Shape.Heart)
             {
-                GenerateHeart(typeCounts);
+                GenerateHeartWithIncreasedTriplets(typeCounts);
             }
         }
 
-        private void GeneratePyramid(int[] typeCounts)
+        public void GeneratePyramidWithIncreasedTriplets(int[] typeCounts)
         {
-            var random = new Random();
+            var buffer = CreateTileBuffer(typeCounts);
+
+            int centerOffset = MaxLayers / 2;
+            int bufferIndex = 0;
+
+            for (int layer = 0; layer < MaxLayers; layer++)
+            {
+                int layerSize = layer + 1;
+
+                for (int x = 0; x < layerSize; x++)
+                {
+                    for (int y = 0; y < layerSize; y++)
+                    {
+                        if (bufferIndex >= buffer.Count) break;
+
+                        var tile = buffer[bufferIndex++];
+                        tile.Layer = layer;
+                        tile.X = centerOffset - layer / 2 + x;
+                        tile.Y = centerOffset - layer / 2 + y;
+
+                        if (tile.X == centerOffset - layer / 2 || tile.Y == centerOffset - layer / 2)
+                        {
+                            tile.IsAvailable = true;
+                        }
+
+                        Tiles.Add(tile);
+                    }
+                }
+            }
+        }
+
+        public void GenerateHeartWithIncreasedTriplets(int[] typeCounts)
+        {
+            var buffer = CreateTileBuffer(typeCounts);
+            int[,] heartMatrix = GetHeartMatrix();
+
+            int rows = heartMatrix.GetLength(0);
+            int cols = heartMatrix.GetLength(1);
+            int bufferIndex = 0;
+
+            for (int layer = 0; layer < rows; layer++)
+            {
+                for (int x = 0; x < cols; x++)
+                {
+                    if (heartMatrix[layer, x] == 1 && bufferIndex < buffer.Count)
+                    {
+                        var tile = buffer[bufferIndex++];
+                        tile.Layer = layer;
+                        tile.X = x - cols / 4;
+                        tile.Y = layer;
+                        if (tile.X == cols / 4 || tile.Y == rows / 2)
+                        {
+                            tile.IsAvailable = true;
+                        }
+
+                        Tiles.Add(tile);
+                    }
+                }
+            }
+        }
+
+        public void GeneratePyramid(int[] typeCounts)
+        {
             var buffer = CreateTileBuffer(typeCounts);
 
             int centerOffset = MaxLayers / 2;
@@ -143,9 +200,8 @@ namespace MahjongGameLibrary
             }
         }
 
-        private void GenerateHeart(int[] typeCounts)
+        public void GenerateHeart(int[] typeCounts)
         {
-            var random = new Random();
             var buffer = CreateTileBuffer(typeCounts);
             int[,] heartMatrix = GetHeartMatrix();
 
@@ -170,6 +226,46 @@ namespace MahjongGameLibrary
             }
         }
 
+        public void GeneratePyramidForWFA(int maxLayers, List<Tile> tiles)
+        {
+            int index = 0;
+            for (int layer = 0; layer < maxLayers; layer++)
+            {
+                int tilesInLayer = maxLayers - layer;
+                for (int i = 0; i < tilesInLayer; i++)
+                {
+                    var tile = tiles[index++];
+                    tile.Layer = maxLayers - 1 - layer;
+
+                    tile.X = i - tilesInLayer / 2;
+                    tile.Y = maxLayers - 1 - layer;
+                    tile.IsAvailable = (layer == 0);
+
+                    Tiles.Add(tile);
+                }
+            }
+        }
+
+        public void GenerateHeartForWFA(int maxLayers, List<Tile> tiles)
+        {
+            int index = 0;
+            for (int layer = 0; layer < maxLayers; layer++)
+            {
+                int tilesInLayer = maxLayers - Math.Abs(layer - maxLayers / 2);
+                for (int i = 0; i < tilesInLayer; i++)
+                {
+                    var tile = tiles[index++];
+                    tile.Layer = maxLayers - 1 - layer;
+                    tile.X = i - tilesInLayer / 2;
+                    tile.Y = maxLayers - 1 - layer;
+
+                    tile.IsAvailable = (layer == 0);
+
+                    Tiles.Add(tile);
+                }
+            }
+        }
+
         private List<Tile> CreateTileBuffer(int[] typeCounts)
         {
             int tileIndex = 0;
@@ -188,7 +284,6 @@ namespace MahjongGameLibrary
                 }
             }
 
-            var random = new Random();
             return buffer.OrderBy(_ => random.Next()).ToList();
         }
 
@@ -210,42 +305,8 @@ namespace MahjongGameLibrary
 
         private void ShuffleTiles()
         {
-            var random = new Random();
             Tiles = Tiles.OrderBy(_ => random.Next()).ToList();
         }
-
-        //private bool IsSolvable()
-        //{
-        //    var simulatedTiles = Tiles.ToList();
-        //    var collectionField = new CollectionField();
-
-        //    while (simulatedTiles.Count > 0)
-        //    {
-        //        var availableTiles = simulatedTiles.Where(t => t.IsAvailable).ToList();
-
-        //        if (!availableTiles.Any())
-        //        {
-        //            return false;
-        //        }
-
-        //        foreach (var tile in availableTiles.Take(7))
-        //        {
-        //            collectionField.AddTile(tile);
-        //            simulatedTiles.Remove(tile);
-        //        }
-
-        //        var triplets = collectionField.CheckForTriplets();
-        //        if (!triplets.Any())
-        //        {
-        //            return false;
-        //        }
-
-        //        UpdateTileAvailability(simulatedTiles);
-        //    }
-
-        //    return true;
-        //}
-
 
         public void RemoveTile(Tile tile)
         {
@@ -257,10 +318,20 @@ namespace MahjongGameLibrary
         {
             foreach (var tile in Tiles)
             {
-                tile.IsAvailable = !Tiles.Any(t =>
-                    t.Layer > tile.Layer &&
-                    Math.Abs(t.X - tile.X) <= 1 &&
-                    Math.Abs(t.Y - tile.Y) <= 1);
+                if (isWFA)
+                {
+                    tile.IsAvailable = !Tiles.Any(t =>
+                        t.Layer < tile.Layer &&
+                        Math.Abs(t.X - tile.X) <= 1 &&
+                        Math.Abs(t.Y - tile.Y) <= 1);
+                }
+                else
+                {
+                    tile.IsAvailable = !Tiles.Any(t =>
+                        t.Layer > tile.Layer &&
+                        Math.Abs(t.X - tile.X) <= 1 &&
+                        Math.Abs(t.Y - tile.Y) <= 1);
+                }
             }
         }
     }

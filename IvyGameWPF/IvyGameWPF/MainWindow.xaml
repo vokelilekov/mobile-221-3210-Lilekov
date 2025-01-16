@@ -5,8 +5,7 @@
     <Grid>
  
         <Border Background="#DCEAE0" BorderBrush="#A8C3A0" BorderThickness="3" CornerRadius="15" Margin="10">
-            <Canvas x:Name="GameCanvas" Width="600" Height="400" Background="Transparent" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center" Margin="100">
+            <Canvas x:Name="GameCanvas" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Canvas.Effect>
                     <DropShadowEffect ShadowDepth="5" BlurRadius="15" Color="#A3B9A2"/>
                 </Canvas.Effect>
@@ -35,26 +34,72 @@
             </StackPanel>
         </Border>
 
-        <Button Content="Начать игру" HorizontalAlignment="Right" VerticalAlignment="Top" Click="StartNewGame"
-                Width="150" Height="50" Margin="0,25,25,0" FontSize="16" FontWeight="Bold" Foreground="White" Background="#F4A261"
-                BorderThickness="2" BorderBrush="#E76F51" Cursor="Hand">
-            <Button.Template>
-                <ControlTemplate TargetType="Button">
-                    <Grid>
-                        <Rectangle Fill="{TemplateBinding Background}" RadiusX="10" RadiusY="10"/>
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#E76F51"/>
-                            <Setter Property="Foreground" Value="White"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Button.Template>
-            <Button.Effect>
-                <DropShadowEffect ShadowDepth="3" BlurRadius="10" Color="#704C24"/>
-            </Button.Effect>
-        </Button>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,25,25,0" >
+            <Button Content="Меньше" Click="buttonMinus_Click"
+                    Width="100" Height="50" FontSize="14" FontWeight="Bold" Foreground="White" Background="#4CAF50"
+                    BorderThickness="2" BorderBrush="#388E3C" Cursor="Hand" Margin="0,0,5,0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="{TemplateBinding Background}" RadiusX="10" RadiusY="10"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#388E3C"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Effect>
+                    <DropShadowEffect ShadowDepth="3" BlurRadius="10" Color="#2E7D32"/>
+                </Button.Effect>
+            </Button>
+
+            <Button Content="Больше" Click="buttonPlus_Click"
+                    Width="100" Height="50" FontSize="14" FontWeight="Bold" Foreground="White" Background="#4CAF50"
+                    BorderThickness="2" BorderBrush="#388E3C" Cursor="Hand" Margin="0,0,5,0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="{TemplateBinding Background}" RadiusX="10" RadiusY="10"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#388E3C"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Effect>
+                    <DropShadowEffect ShadowDepth="3" BlurRadius="10" Color="#2E7D32"/>
+                </Button.Effect>
+            </Button>
+
+            <Button Content="Начать игру" Click="StartNewGame"
+                    Width="150" Height="50" FontSize="16" FontWeight="Bold" Foreground="White" Background="#F4A261"
+                    BorderThickness="2" BorderBrush="#E76F51" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="{TemplateBinding Background}" RadiusX="10" RadiusY="10"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#E76F51"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Effect>
+                    <DropShadowEffect ShadowDepth="3" BlurRadius="10" Color="#704C24"/>
+                </Button.Effect>
+            </Button>
+        </StackPanel>
     </Grid>
 </Window>

@@ -328,7 +328,6 @@ namespace DoWayWPF
                 MapCanvas.Children.Add(tempRect);
             }
         }
-       
         private void MapCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (_isDrawing)
@@ -385,7 +384,6 @@ namespace DoWayWPF
                 }
             }
         }
-
         private void MapCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             _isMovingMap = true;
@@ -711,6 +709,5 @@ namespace DoWayWPF
 
             return EmptySpriteIndex;
         }
-
     }
 }

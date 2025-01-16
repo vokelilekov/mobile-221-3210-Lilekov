@@ -18,7 +18,7 @@ namespace MahjongGame
         private const string SpriteFolder = "Resources";
         private Difficulty selectedDifficulty = Difficulty.Easy;
         private Shape selectedShape;
-        private int tileSize = 70;
+        private int tileSize = 100;
 
         public MainWindow()
         {
@@ -63,12 +63,14 @@ namespace MahjongGame
         private void RenderGameField()
         {
             GameCanvas.Children.Clear();
+
             double canvasCenterX = GameCanvas.ActualWidth / 2;
             double canvasCenterY = GameCanvas.ActualHeight / 2;
-            double scaleFactor = Math.Min(GameCanvas.ActualWidth / 300, GameCanvas.ActualHeight / 500);
+            double scaleFactor = Math.Min(GameCanvas.ActualWidth / 600, GameCanvas.ActualHeight / 1200);
             double adaptiveTileSize = tileSize * scaleFactor;
             double figureWidth = adaptiveTileSize * (gameField.MaxLayers + 1);
             double figureHeight = adaptiveTileSize * (gameField.MaxLayers + 1);
+
             double offsetX = canvasCenterX - figureWidth / 2;
             double offsetY = canvasCenterY - figureHeight / 2;
 
@@ -97,6 +99,8 @@ namespace MahjongGame
 
                 double tileOffsetX = offsetX + tile.X * adaptiveTileSize + tile.Layer * 7 * scaleFactor;
                 double tileOffsetY = offsetY + tile.Y * adaptiveTileSize - tile.Layer * 7 * scaleFactor;
+                tileOffsetX = Math.Max(0, Math.Min(tileOffsetX, GameCanvas.ActualWidth - adaptiveTileSize));
+                tileOffsetY = Math.Max(0, Math.Min(tileOffsetY, GameCanvas.ActualHeight - adaptiveTileSize));
 
                 Canvas.SetLeft(border, tileOffsetX);
                 Canvas.SetTop(border, tileOffsetY);
@@ -121,6 +125,7 @@ namespace MahjongGame
                 border.MouseLeftButtonDown += (s, e) => Tile_Click(tile, border);
             }
         }
+
 
         private void RenderCollectionField()
         {
@@ -186,44 +191,41 @@ namespace MahjongGame
         }
 
         private void RemoveTriplets()
-{
-    var removedTiles = collectionField.CheckForTriplets();
-
-    if (removedTiles.Any())
-    {
-        foreach (var tile in removedTiles)
         {
-            var borderToRemove = CollectionFieldPanel.Children
-                .OfType<Border>()
-                .FirstOrDefault(b => b.Child is Image img && img.Source == tileSprites[tile.Type]);
+            var removedTiles = collectionField.CheckForTriplets();
 
-            if (borderToRemove != null)
+            if (removedTiles.Any())
             {
-                AnimateTileContentRemoval(borderToRemove);
+                foreach (var tile in removedTiles)
+                {
+
+                    var borderToRemove = CollectionFieldPanel.Children
+                        .OfType<Border>()
+                        .FirstOrDefault(b => b.Child is Image img && img.Source == tileSprites[tile.Type]);
+                        AnimateTileContentRemoval(borderToRemove);
+                }
+
+                RenderCollectionField();
             }
         }
 
-        RenderCollectionField();
-    }
-}
-
         private void AnimateTileContentRemoval(Border border)
         {
-            var fadeOut = new DoubleAnimation
-            {
-                From = 1.0,
-                To = 0.0,
-                Duration = TimeSpan.FromSeconds(0.5),
-                FillBehavior = FillBehavior.Stop
-            };
-
-            fadeOut.Completed += (s, e) =>
-            {
-                border.Child = null;
-            };
-
             if (border.Child is UIElement child)
             {
+                var fadeOut = new DoubleAnimation
+                {
+                    From = 1.0,
+                    To = 0.0,
+                    Duration = TimeSpan.FromSeconds(0.5),
+                    FillBehavior = FillBehavior.Stop
+                };
+
+                fadeOut.Completed += (s, e) =>
+                {
+                    border.Child = null;
+                };
+
                 child.BeginAnimation(UIElement.OpacityProperty, fadeOut);
             }
         }
@@ -244,6 +246,17 @@ namespace MahjongGame
         private void StartNewGame(object sender, RoutedEventArgs e)
         {
             StartNewGame();
+        }
+
+        private void buttonPlus_Click(object sender, EventArgs e)
+        {
+            tileSize += 10;
+            RenderGameField();
+        }
+        private void buttonMinus_Click(object sender, EventArgs e)
+        {
+            tileSize -= 10;
+            RenderGameField();
         }
     }
 }
