@@ -3,14 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Маджонг" Height="600" Width="800" Background="#FAF3E0" WindowState="Maximized" SizeChanged="Window_SizeChanged">
     <Grid>
- 
         <Border Background="#DCEAE0" BorderBrush="#A8C3A0" BorderThickness="3" CornerRadius="15" Margin="10">
-            <Canvas x:Name="GameCanvas" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Canvas x:Name="GameCanvas" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseWheel="GameCanvas_MouseWheel">
                 <Canvas.Effect>
                     <DropShadowEffect ShadowDepth="5" BlurRadius="15" Color="#A3B9A2"/>
                 </Canvas.Effect>
             </Canvas>
         </Border>
+
         <ComboBox x:Name="DifficultySelector" 
           HorizontalAlignment="Left" VerticalAlignment="Top" 
           Margin="22,20,0,0" Width="150" Height="30" 
@@ -34,7 +34,29 @@
             </StackPanel>
         </Border>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,25,25,0" >
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,25,25,0">
+            <Button Content="Правила игры" Click="ShowRules"
+        Width="100" Height="35" FontSize="12" FontWeight="Bold" Foreground="White" Background="#F4A261"
+        BorderThickness="2" BorderBrush="#E76F51" Cursor="Hand" Margin="0,0,25,0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="{TemplateBinding Background}" RadiusX="10" RadiusY="10"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#E76F51"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Effect>
+                    <DropShadowEffect ShadowDepth="3" BlurRadius="10" Color="#704C24"/>
+                </Button.Effect>
+            </Button>
+
             <Button Content="Меньше" Click="buttonMinus_Click"
                     Width="100" Height="50" FontSize="14" FontWeight="Bold" Foreground="White" Background="#4CAF50"
                     BorderThickness="2" BorderBrush="#388E3C" Cursor="Hand" Margin="0,0,5,0">

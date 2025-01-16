@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -19,6 +20,7 @@ namespace MahjongGame
         private Difficulty selectedDifficulty = Difficulty.Easy;
         private Shape selectedShape;
         private int tileSize = 100;
+
 
         public MainWindow()
         {
@@ -258,5 +260,38 @@ namespace MahjongGame
             tileSize -= 10;
             RenderGameField();
         }
+        private void ShowRules(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Правила игры Маджонг:\n\n" +
+                            "1. Задача игры — очистить игровое поле, удаляя тройки одинаковых плиток.\n" +
+                            "2. Плитки могут быть удалены только в том случае, если они не закрыты другими плитками.\n" +
+                            "3. В игре есть несколько уровней сложности: Легкий, Средний, Сложный.\n" +
+                            "4. У вас есть поле, куда собираются тройки плиток. Но помни, что места всего на 7 плиток!\n\n" +
+                            "Удачи!");
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+    
+
+        private void GameCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (e.Delta > 0) 
+            {
+                tileSize += 5;
+            }
+            else if (e.Delta < 0)
+            {
+                if (tileSize > 30) 
+                {
+                    tileSize -= 5;
+                }
+            }
+
+            RenderGameField();
+        }
+
     }
 }

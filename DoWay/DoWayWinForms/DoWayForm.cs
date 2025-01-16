@@ -292,6 +292,33 @@ namespace DoWayWinForms
                 }
             }
         }
+        private void AddIntermediatePoints(Point start, Point end)
+        {
+            var points = new List<Point>();
+
+            if (start.X == end.X)
+            {
+                for (int y = Math.Min(start.Y, end.Y); y <= Math.Max(start.Y, end.Y); y++)
+                {
+                    points.Add(new Point(start.X, y));
+                }
+            }
+            else if (start.Y == end.Y)
+            {
+                for (int x = Math.Min(start.X, end.X); x <= Math.Max(start.X, end.X); x++)
+                {
+                    points.Add(new Point(x, start.Y));
+                }
+            }
+
+            foreach (var point in points)
+            {
+                if (!_temporaryLine.Contains(point))
+                {
+                    _temporaryLine.Add(point);
+                }
+            }
+        }
         private void PanelMap_Paint(object sender, PaintEventArgs e)
         {
             if (_map == null) return;
@@ -437,8 +464,11 @@ namespace DoWayWinForms
                 var mapPoint = _viewport.TransformToMap(e.Location);
                 var currentPoint = new Point(mapPoint.X / CellSize, mapPoint.Y / CellSize);
 
-                if (_temporaryLine.Count > 0 && _temporaryLine[_temporaryLine.Count - 1] == currentPoint)
-                    return;
+                if (_temporaryLine.Count > 0)
+                {
+                    var lastPoint = _temporaryLine[_temporaryLine.Count - 1];
+                    AddIntermediatePoints(lastPoint, currentPoint);
+                }
 
                 if (_isHorizontal == null)
                 {
@@ -448,8 +478,7 @@ namespace DoWayWinForms
                         _isHorizontal = false;
                 }
 
-                if ((_isHorizontal == true && currentPoint.Y == _startPoint.Y) ||
-                    (_isHorizontal == false && currentPoint.X == _startPoint.X))
+                if ((_isHorizontal == true && currentPoint.Y == _startPoint.Y) || (_isHorizontal == false && currentPoint.X == _startPoint.X))
                 {
                     if (!_temporaryLine.Contains(currentPoint))
                     {

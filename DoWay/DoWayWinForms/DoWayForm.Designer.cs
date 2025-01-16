@@ -68,7 +68,7 @@
             this.panelMap.Margin = new System.Windows.Forms.Padding(20);
             this.panelMap.Name = "panelMap";
             this.panelMap.Padding = new System.Windows.Forms.Padding(20);
-            this.panelMap.Size = new System.Drawing.Size(1271, 986);
+            this.panelMap.Size = new System.Drawing.Size(1271, 985);
             this.panelMap.TabIndex = 0;
             // 
             // label4
@@ -190,13 +190,13 @@
             this.tableLayoutPanel1.Controls.Add(this.panelSprites, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.pictureBoxSelectedSprite, 2, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 35);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 36);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.Padding = new System.Windows.Forms.Padding(10);
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 5F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 95F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1893, 1099);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1893, 1098);
             this.tableLayoutPanel1.TabIndex = 8;
             // 
             // label6
@@ -223,7 +223,7 @@
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(9, 3, 9, 3);
-            this.menuStrip1.Size = new System.Drawing.Size(1893, 35);
+            this.menuStrip1.Size = new System.Drawing.Size(1893, 36);
             this.menuStrip1.TabIndex = 9;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -234,7 +234,7 @@
             this.загрузитьКToolStripMenuItem,
             this.экспортВPNGToolStripMenuItem});
             this.afqToolStripMenuItem.Name = "afqToolStripMenuItem";
-            this.afqToolStripMenuItem.Size = new System.Drawing.Size(69, 29);
+            this.afqToolStripMenuItem.Size = new System.Drawing.Size(69, 30);
             this.afqToolStripMenuItem.Text = "Файл";
             // 
             // сохранитьКартуToolStripMenuItem
@@ -265,7 +265,7 @@
             this.очиститьКартуToolStripMenuItem,
             this.добавитьДеревьяToolStripMenuItem});
             this.инструментыToolStripMenuItem.Name = "инструментыToolStripMenuItem";
-            this.инструментыToolStripMenuItem.Size = new System.Drawing.Size(138, 29);
+            this.инструментыToolStripMenuItem.Size = new System.Drawing.Size(138, 30);
             this.инструментыToolStripMenuItem.Text = "Инструменты";
             // 
             // ластикToolStripMenuItem
@@ -294,13 +294,13 @@
             this.справкаToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.инструкцияToolStripMenuItem});
             this.справкаToolStripMenuItem.Name = "справкаToolStripMenuItem";
-            this.справкаToolStripMenuItem.Size = new System.Drawing.Size(97, 32);
+            this.справкаToolStripMenuItem.Size = new System.Drawing.Size(97, 30);
             this.справкаToolStripMenuItem.Text = "Справка";
             // 
             // инструкцияToolStripMenuItem
             // 
             this.инструкцияToolStripMenuItem.Name = "инструкцияToolStripMenuItem";
-            this.инструкцияToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
+            this.инструкцияToolStripMenuItem.Size = new System.Drawing.Size(211, 34);
             this.инструкцияToolStripMenuItem.Text = "Инструкция";
             this.инструкцияToolStripMenuItem.Click += new System.EventHandler(this.инструкцияToolStripMenuItem_Click);
             // 
